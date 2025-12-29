@@ -29,34 +29,87 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 # set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/libs)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+## Find catkin macros and libraries
+find_package(catkin REQUIRED COMPONENTS
+    roscpp
+    std_msgs
+    geometry_msgs
+    sensor_msgs
+    nav_msgs
+    std_srvs
+    tf
+    pcl_conversions
+    pcl_ros
+    message_filters
+    visualization_msgs
+    message_generation
+    rosbag
+)
+
 include(cmake/packages.cmake)
 
-# msg 和 srv
-set(MY_SRV_FILES "")
-set(SRC_DIR ${PROJECT_SOURCE_DIR}/srv)
-file(GLOB_RECURSE SRC_FILES ${SRC_DIR}/*.srv)
-foreach (SRC_FILE ${SRC_FILES})
-    file(RELATIVE_PATH REL_PATH ${SRC_DIR} ${SRC_FILE})
-    list(APPEND MY_SRV_FILES ${PROJECT_SOURCE_DIR}:srv/${REL_PATH})
-endforeach ()
-
-rosidl_generate_interfaces(${PROJECT_NAME}
-        ${MY_SRV_FILES}
-        ${MY_MSG_FILES}
-        ${MY_ACTION_FILES}
-        DEPENDENCIES std_msgs geometry_msgs sensor_msgs nav_msgs
+## Generate services in the 'srv' folder
+add_service_files(
+    FILES
+    LocCmd.srv
+    SaveMap.srv
 )
+
+## Generate added messages and services with any dependencies listed here
+generate_messages(
+    DEPENDENCIES
+    std_msgs
+    geometry_msgs
+    sensor_msgs
+    nav_msgs
+)
+
+###################################
+## catkin specific configuration ##
+###################################
+catkin_package(
+    INCLUDE_DIRS src
+    CATKIN_DEPENDS 
+        roscpp 
+        std_msgs 
+        geometry_msgs 
+        sensor_msgs 
+        nav_msgs 
+        std_srvs 
+        tf 
+        pcl_conversions 
+        pcl_ros 
+        message_filters 
+        visualization_msgs
+        message_runtime
+    DEPENDS 
+        PCL 
+        OpenCV 
+        Eigen3 
+        Pangolin
+)
+
+###########
+## Build ##
+###########
 
 include_directories(
-        ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp
-)
-
-install(DIRECTORY config
-        DESTINATION lib/${PROJECT_NAME}/
+    ${catkin_INCLUDE_DIRS}
 )
 
 add_subdirectory(thirdparty/livox_ros_driver)
 
 add_subdirectory(src)
 
-ament_package()
+#############
+## Install ##
+#############
+
+install(DIRECTORY config
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+install(DIRECTORY launch
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
