@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Arguments -->
+    <arg name="config" default="$(find lightning)/config/default.yaml" />
+    
+    <!-- Lightning Localization Online Node -->
+    <node name="lightning_loc" pkg="lightning" type="run_loc_online" output="screen">
+        <param name="config" value="$(arg config)" />
+    </node>
+
+</launch>

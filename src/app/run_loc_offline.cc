@@ -20,8 +20,8 @@ DEFINE_string(map_path, "./data/new_map/", "地图路径");
 /// 运行定位的测试
 int main(int argc, char** argv) {
     google::InitGoogleLogging(argv[0]);
+    FLAGS_logtostderr = 1;
     FLAGS_colorlogtostderr = true;
-    FLAGS_stderrthreshold = google::INFO;
 
     google::ParseCommandLineFlags(&argc, &argv, true);
     if (FLAGS_input_bag.empty()) {
@@ -51,13 +51,13 @@ int main(int argc, char** argv) {
                           return true;
                       })
         .AddPointCloud2Handle(lidar_topic,
-                              [&loc](sensor_msgs::msg::PointCloud2::SharedPtr cloud) {
+                              [&loc](sensor_msgs::PointCloud2::ConstPtr cloud) {
                                   loc.ProcessLidarMsg(cloud);
                                   usleep(1000);
                                   return true;
                               })
         .AddLivoxCloudHandle("/livox/lidar",
-                             [&loc](livox_ros_driver2::msg::CustomMsg::SharedPtr cloud) {
+                             [&loc](livox_ros_driver2::msg::CustomMsg::ConstPtr cloud) {
                                  loc.ProcessLivoxLidarMsg(cloud);
                                  usleep(1000);
                                  return true;
@@ -68,6 +68,8 @@ int main(int argc, char** argv) {
     loc.Finish();
 
     LOG(INFO) << "done";
+
+    google::ShutdownGoogleLogging();
 
     return 0;
 }

@@ -14,9 +14,9 @@
 #include <cmath>
 #include <numeric>
 
-#include <tf2/LinearMath/Matrix3x3.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <rclcpp/time.hpp>
+#include <tf/LinearMath/Matrix3x3.h>
+#include <tf/LinearMath/Quaternion.h>
+#include <ros/time.h>
 
 #include "common/eigen_types.h"
 #include "common/options.h"
@@ -567,11 +567,8 @@ inline void KeepAngleIn2PI(double& angle) {
     }
 }
 
-inline builtin_interfaces::msg::Time FromSec(double t) {
-    builtin_interfaces::msg::Time ret;
-    ret.sec = int32_t(t);
-    ret.nanosec = int32_t((t - ret.sec) * 1e9);
-    return ret;
+inline ros::Time FromSec(double t) {
+    return ros::Time(t);
 }
 
 /// 从pose中取出yaw pitch roll

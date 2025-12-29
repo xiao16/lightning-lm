@@ -14,13 +14,13 @@ DEFINE_string(config, "./config/default.yaml", "配置文件");
 /// 运行定位的测试
 int main(int argc, char** argv) {
     google::InitGoogleLogging(argv[0]);
+    FLAGS_logtostderr = 1;
     FLAGS_colorlogtostderr = true;
-    FLAGS_stderrthreshold = google::INFO;
 
     google::ParseCommandLineFlags(&argc, &argv, true);
     using namespace lightning;
 
-    rclcpp::init(argc, argv);
+    ros::init(argc, argv, "lightning_loc");
 
     LocSystem::Options opt;
     LocSystem loc(opt);
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     loc.SetInitPose(SE3());
     loc.Spin();
 
-    rclcpp::shutdown();
+    google::ShutdownGoogleLogging();
 
     return 0;
 }

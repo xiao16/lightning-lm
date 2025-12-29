@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Arguments -->
+    <arg name="config" default="$(find lightning)/config/default.yaml" />
+    
+    <!-- Lightning SLAM Online Node -->
+    <node name="lightning_slam" pkg="lightning" type="run_slam_online" output="screen">
+        <param name="config" value="$(arg config)" />
+    </node>
+
+</launch>

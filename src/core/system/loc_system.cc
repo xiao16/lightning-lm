@@ -25,19 +25,18 @@ bool LocSystem::Init(const std::string &yaml_path) {
 
     std::string map_path = yaml.GetValue<std::string>("system", "map_path");
 
-    LOG(INFO) << "online mode, creating ros2 node ... ";
+    LOG(INFO) << "online mode, creating ros1 node ... ";
 
     /// subscribers
-    node_ = std::make_shared<rclcpp::Node>("lightning_slam");
+    nh_ = std::make_shared<ros::NodeHandle>();
+    pnh_ = std::make_shared<ros::NodeHandle>("~");
 
     imu_topic_ = yaml.GetValue<std::string>("common", "imu_topic");
     cloud_topic_ = yaml.GetValue<std::string>("common", "lidar_topic");
     livox_topic_ = yaml.GetValue<std::string>("common", "livox_lidar_topic");
 
-    rclcpp::QoS qos(10);
-
-    imu_sub_ = node_->create_subscription<sensor_msgs::msg::Imu>(
-        imu_topic_, qos, [this](sensor_msgs::msg::Imu::SharedPtr msg) {
+    imu_sub_ = nh_->subscribe<sensor_msgs::Imu>(
+        imu_topic_, 100, [this](const sensor_msgs::Imu::ConstPtr& msg) {
             IMUPtr imu = std::make_shared<IMU>();
             imu->timestamp = ToSec(msg->header.stamp);
             imu->linear_acceleration =
@@ -47,20 +46,36 @@ bool LocSystem::Init(const std::string &yaml_path) {
             ProcessIMU(imu);
         });
 
-    cloud_sub_ = node_->create_subscription<sensor_msgs::msg::PointCloud2>(
-        cloud_topic_, qos, [this](sensor_msgs::msg::PointCloud2::SharedPtr cloud) {
+    cloud_sub_ = nh_->subscribe<sensor_msgs::PointCloud2>(
+        cloud_topic_, 100, [this](const sensor_msgs::PointCloud2::ConstPtr& cloud) {
             Timer::Evaluate([&]() { ProcessLidar(cloud); }, "Proc Lidar", true);
         });
 
-    livox_sub_ = node_->create_subscription<livox_ros_driver2::msg::CustomMsg>(
-        livox_topic_, qos, [this](livox_ros_driver2::msg::CustomMsg ::SharedPtr cloud) {
+    livox_sub_ = nh_->subscribe<livox_ros_driver2::msg::CustomMsg>(
+        livox_topic_, 100, [this](const livox_ros_driver2::msg::CustomMsg::ConstPtr& cloud) {
             Timer::Evaluate([&]() { ProcessLidar(cloud); }, "Proc Lidar", true);
         });
 
     if (options_.pub_tf_) {
-        tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(node_);
+        tf_broadcaster_ = std::make_shared<tf::TransformBroadcaster>();
         loc_->SetTFCallback(
-            [this](const geometry_msgs::msg::TransformStamped &pose) { tf_broadcaster_->sendTransform(pose); });
+            [this](const geometry_msgs::TransformStamped &pose) { 
+                tf::Transform transform;
+                transform.setOrigin(tf::Vector3(pose.transform.translation.x, 
+                                                 pose.transform.translation.y, 
+                                                 pose.transform.translation.z));
+                tf::Quaternion q(pose.transform.rotation.x, 
+                                 pose.transform.rotation.y, 
+                                 pose.transform.rotation.z, 
+                                 pose.transform.rotation.w);
+                transform.setRotation(q);
+                
+                tf_broadcaster_->sendTransform(
+                    tf::StampedTransform(transform, 
+                                        ros::Time(pose.header.stamp.sec, pose.header.stamp.nanosec),
+                                        pose.header.frame_id, 
+                                        pose.child_frame_id));
+            });
     }
 
     bool ret = loc_->Init(yaml_path, map_path);
@@ -85,21 +100,21 @@ void LocSystem::ProcessIMU(const IMUPtr &imu) {
     }
 }
 
-void LocSystem::ProcessLidar(const sensor_msgs::msg::PointCloud2::SharedPtr &cloud) {
+void LocSystem::ProcessLidar(const sensor_msgs::PointCloud2::ConstPtr &cloud) {
     if (loc_started_) {
         loc_->ProcessLidarMsg(cloud);
     }
 }
 
-void LocSystem::ProcessLidar(const livox_ros_driver2::msg::CustomMsg::SharedPtr &cloud) {
+void LocSystem::ProcessLidar(const livox_ros_driver2::msg::CustomMsg::ConstPtr &cloud) {
     if (loc_started_) {
         loc_->ProcessLivoxLidarMsg(cloud);
     }
 }
 
 void LocSystem::Spin() {
-    if (node_ != nullptr) {
-        spin(node_);
+    if (nh_ != nullptr) {
+        ros::spin();
     }
 }
 

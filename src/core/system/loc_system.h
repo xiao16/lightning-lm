@@ -5,10 +5,10 @@
 #ifndef LIGHTNING_LOC_SYSTEM_H
 #define LIGHTNING_LOC_SYSTEM_H
 
-#include <tf2_ros/transform_broadcaster.h>
-#include <rclcpp/rclcpp.hpp>
-#include <sensor_msgs/msg/imu.hpp>
-#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <tf/transform_broadcaster.h>
+#include <ros/ros.h>
+#include <sensor_msgs/Imu.h>
+#include <sensor_msgs/PointCloud2.h>
 
 #include "livox_ros_driver2/msg/custom_msg.hpp"
 
@@ -41,8 +41,8 @@ class LocSystem {
     void ProcessIMU(const lightning::IMUPtr& imu);
 
     /// 处理点云
-    void ProcessLidar(const sensor_msgs::msg::PointCloud2::SharedPtr& cloud);
-    void ProcessLidar(const livox_ros_driver2::msg::CustomMsg::SharedPtr& cloud);
+    void ProcessLidar(const sensor_msgs::PointCloud2::ConstPtr& cloud);
+    void ProcessLidar(const livox_ros_driver2::msg::CustomMsg::ConstPtr& cloud);
 
     /// 实时模式下的spin
     void Spin();
@@ -55,17 +55,18 @@ class LocSystem {
     std::atomic_bool loc_started_ = false;  // 是否开启定位
     std::atomic_bool map_loaded_ = false;   // 地图是否已载入
 
-    /// 实时模式下的ros2 node, subscribers
-    rclcpp::Node::SharedPtr node_;
-    std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_ = nullptr;
+    /// 实时模式下的ros1 node, subscribers
+    std::shared_ptr<ros::NodeHandle> nh_;
+    std::shared_ptr<ros::NodeHandle> pnh_;
+    std::shared_ptr<tf::TransformBroadcaster> tf_broadcaster_ = nullptr;
 
     std::string imu_topic_;
     std::string cloud_topic_;
     std::string livox_topic_;
 
-    rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_ = nullptr;
-    rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_sub_ = nullptr;
-    rclcpp::Subscription<livox_ros_driver2::msg::CustomMsg>::SharedPtr livox_sub_ = nullptr;
+    ros::Subscriber imu_sub_;
+    ros::Subscriber cloud_sub_;
+    ros::Subscriber livox_sub_;
 };
 
 };  // namespace lightning

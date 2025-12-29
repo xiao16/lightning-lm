@@ -15,14 +15,14 @@ DEFINE_string(config, "./config/default.yaml", "配置文件");
 /// 运行一个LIO前端，带可视化
 int main(int argc, char** argv) {
     google::InitGoogleLogging(argv[0]);
+    FLAGS_logtostderr = 1;
     FLAGS_colorlogtostderr = true;
-    FLAGS_stderrthreshold = google::INFO;
     google::ParseCommandLineFlags(&argc, &argv, true);
 
     using namespace lightning;
 
-    /// 需要rclcpp::init
-    rclcpp::init(argc, argv);
+    /// 需要ros::init
+    ros::init(argc, argv, "lightning_slam");
 
     SlamSystem::Options options;
     options.online_mode_ = true;
@@ -38,9 +38,9 @@ int main(int argc, char** argv) {
 
     Timer::PrintAll();
 
-    rclcpp::shutdown();
-
     LOG(INFO) << "done";
+
+    google::ShutdownGoogleLogging();
 
     return 0;
 }
