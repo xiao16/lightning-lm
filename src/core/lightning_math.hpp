@@ -567,11 +567,8 @@ inline void KeepAngleIn2PI(double& angle) {
     }
 }
 
-inline builtin_interfaces::msg::Time FromSec(double t) {
-    builtin_interfaces::msg::Time ret;
-    ret.sec = int32_t(t);
-    ret.nanosec = int32_t((t - ret.sec) * 1e9);
-    return ret;
+inline ros::Time FromSec(double t) {
+    return ros::Time(t);
 }
 
 /// 从pose中取出yaw pitch roll
