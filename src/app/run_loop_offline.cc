@@ -17,8 +17,8 @@ DEFINE_string(config, "./config/default.yaml", "配置文件");
 /// 运行一个LIO前端，带可视化
 int main(int argc, char** argv) {
     google::InitGoogleLogging(argv[0]);
+    FLAGS_logtostderr = 1;
     FLAGS_colorlogtostderr = true;
-    FLAGS_stderrthreshold = google::INFO;
 
     google::ParseCommandLineFlags(&argc, &argv, true);
     if (FLAGS_input_bag.empty()) {
@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
                           return true;
                       })
         .AddPointCloud2Handle("points_raw",
-                              [&lio, &cur_kf, &loop](sensor_msgs::msg::PointCloud2::SharedPtr cloud) {
+                              [&lio, &cur_kf, &loop](sensor_msgs::PointCloud2::ConstPtr cloud) {
                                   lio.ProcessPointCloud2(cloud);
                                   lio.Run();
 
@@ -72,6 +72,8 @@ int main(int argc, char** argv) {
     ui->Quit();
 
     LOG(INFO) << "done";
+
+    google::ShutdownGoogleLogging();
 
     return 0;
 }
